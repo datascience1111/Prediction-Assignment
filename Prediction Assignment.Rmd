@@ -1,0 +1,150 @@
+---
+
+title: "Prediction Assignment"
+author: "datascience11"
+date: "April 28, 2016"
+output: html_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+## Data
+
+The [training](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv) and [test](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv) data for this project stem from the [Human Activity Recognition](http://groupware.les.inf.puc-rio.br/har#sbia_paper_section#ixzz47B0dPJ1d)
+
+## Importing Data
+
+```{r echo=TRUE}
+
+testing <- read.csv("pml-testing.csv", header = TRUE, sep = ",", na.strings = c("", "NA", "#DIV/0!"))
+training <- read.csv("pml-training.csv", header = TRUE, sep = ",", na.strings = c("", "NA", "#DIV/0!"))
+
+```
+
+```{r echo=TRUE}
+
+dim(training)
+
+```
+
+```{r echo=TRUE}
+
+dim(testing)
+
+```
+
+
+## Eliminating Unnecessary Columns 
+
+After reviewing the column names for the training and testing data sets, this study removed the first seven columns since they do not appear to have any influence for building a predictive model to determine exercise type.  Specifically, these first seven columns include a user's name and time stamps. 
+
+```{r echo=TRUE}
+
+training <- training[, -c(1:7)]
+testing <- testing[, -c(1:7)]
+
+```
+
+
+## Near Zero Variables
+
+In order to build a model that predict the manner in which a subject did an exercise, this study removed zero covariates.  Zero covariates are variable which have no variability at all and are not useful for our prediction model.  This study used the nearZeroVar function in the caret package which produces a table identifying whether the predictor is a near zero variance predictor ($nzv)
+
+```{r echo=TRUE, warning=FALSE}
+
+library(caret)
+nzv <- nearZeroVar(training,saveMetrics=TRUE)
+bad <- which(nzv$nzv==TRUE)
+training <- training[, -bad]
+
+```
+
+```{r echo=TRUE, warning=FALSE}
+
+nzv_test <- nearZeroVar(testing,saveMetrics=TRUE)
+bad_test <- which(nzv_test$nzv==TRUE)
+testing <- testing[, -bad_test]
+
+```
+
+## Determining if columns contain all NA values
+
+Even after performing the near zero variable testing, this project found explored whether columns were all NA, if if so, removed them from before performing cross validation and predictive model testing.
+
+```{r echo=TRUE}
+na = training[, colSums(is.na(training)) == 0]
+ncol(na) 
+
+```
+
+## Removing columns with all NA values from training and testing
+
+```{r echo=TRUE}
+
+training <- training[, colSums(is.na(training)) == 0]
+testing <- testing[, colSums(is.na(testing)) == 0]
+```
+
+## Creating Training and Testing Sets
+
+After data cleaning, this project sliced the data into two partitions for cross validation.  Of note, this project used 75% of the data set for training the model and 25% to test the predictive model. 
+
+```{r echo=TRUE}
+
+set.seed(0623)
+
+inTrain <- createDataPartition(y=training$classe, p=.75, list=FALSE)
+training_set <- training[inTrain,]
+testing_set <- training[-inTrain,]
+
+```
+
+## Random Forest Modeling
+
+There are several models offered using the caret package in R including regression, naive Bayes, support vector machines, boosting and random forests.  This project selected random forest to build a predictive model to use for possibly determine how well people performed certain types of exercises based on accelerometer sensors on wearable fitness devices.  Additionally, this study used the varImpPlot function to identify which variables are higher importance as measured by a Random Forest. 
+
+```{r echo=TRUE, warning=FALSE}
+
+require(randomForest, warn.conflicts = FALSE)
+
+fit=randomForest(classe ~ ., data=training_set)
+varImpPlot(fit, type=2)
+
+
+```
+
+## Predicting with Random Forest Algorithm 
+
+Using a Random Forest algorithm, this study discovered a prediction accuracy of 99.5% for the classe variable.  Other models such as boosting or building trees are options, but given the high accuracy (99.5%), this project's accepts the random forest model used during cross validation to predict the classe variable associated with the Human Activity Recognition data.  
+
+```{r echo=TRUE}
+
+Prediction <- predict(fit, testing_set)
+confusionMatrix(Prediction, testing_set$classe)
+
+
+```
+
+## Using Predictive Model Against Testing Dataset
+
+After performing cross validation with the Random Forest algorithm, this project applied the model to the testing data set (20 total measurements)
+
+```{r echo=TRUE}
+
+Prediction_Test <- predict(fit, testing)
+Prediction_Test
+
+```
+
+
+##Human Activity Recognition Reference
+
+Ugulino, W.; Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. Wearable Computing: Accelerometers' Data Classification of Body Postures and Movements. Proceedings of 21st Brazilian Symposium on Artificial Intelligence. Advances in Artificial Intelligence - SBIA 2012. In: Lecture Notes in Computer Science. , pp. 52-61. Curitiba, PR: Springer Berlin / Heidelberg, 2012. ISBN 978-3-642-34458-9. DOI: 10.1007/978-3-642-34459-6_6
+
