@@ -121,7 +121,7 @@ varImpPlot(fit, type=2)
 
 ## Predicting with Random Forest Algorithm 
 
-Using a Random Forest algorithm, this study discovered a prediction accuracy of 99.5% for the classe variable.  Other models such as boosting or building trees are options, but given the high accuracy (99.5%), this project's accepts the random forest model used during cross validation to predict the classe variable associated with the Human Activity Recognition data.  
+Using a Random Forest algorithm, this study discovered a prediction accuracy of 99.5% for the classe variable.  Given this high prediction accuracy, this project expects the out of sample error rate to be less than 1 percent (1-prediction accuracy).  Other models such as boosting or building trees are additional predictive modeling algorithms, but given the high accuracy (99.5%), this project's accepts the random forest model used during cross validation to predict the classe variable associated with the Human Activity Recognition data. 
 
 ```{r echo=TRUE}
 
