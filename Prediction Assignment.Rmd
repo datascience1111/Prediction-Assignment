@@ -4,6 +4,8 @@ title: "Prediction Assignment"
 author: "datascience11"
 date: "April 28, 2016"
 output: html_document
+keep_md: true
+
 
 ---
 
