@@ -1,10 +1,10 @@
----
+
 title: "Prediction Assignment"
 author: "datascience11"
 date: "April 28, 2016"
 output: html_document
 keep_md: true
----
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
